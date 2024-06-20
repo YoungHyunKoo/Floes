@@ -358,7 +358,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
 
         elif (ib_mask[i] != True) and (ib_mask[i-1] == True):
             
-            if abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 80:
+            if abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
                 # print(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st], ib_cnt_en, ib_cnt_st)
                 ib_mask2[ib_cnt_st:ib_cnt_en+1] = False
             else:
@@ -383,14 +383,14 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
                 
     return ib_mask2, df_ib
 
-def combine_icebergs(df, df_ib, ib_mask):
+def combine_icebergs(df, df_ib, ib_mask, th_fb):
     
     for c in range(1, len(df_ib)):
         fb_btw = df.loc[int(df_ib.loc[c-1, "id_en"]): int(df_ib.loc[c, "id_st"])+1, "fb"]
         # print(c, int(df_ib.loc[c-1, "id_en"]), int(df_ib.loc[c, "id_st"])+1, fb_btw > 1.0)
         x1 = df.loc[int(df_ib.loc[c-1, "id_en"]), "seg_x"]
         x2 = df.loc[int(df_ib.loc[c, "id_st"]), "seg_x"]
-        if all(fb_btw > 1.0) & (abs(x1-x2) < 1000):
+        if all(fb_btw > th_fb) & (abs(x1-x2) < 1000):
             
             ib_cnt_st = df_ib.loc[c-1, "id_st"]
             ib_cnt_en = df_ib.loc[c, "id_en"]
@@ -413,7 +413,7 @@ def combine_icebergs(df, df_ib, ib_mask):
     df_ib = df_ib.reset_index(drop = True)
     
     for c in range(0, len(df_ib)):
-        if df_ib.loc[c, "width"] < 150:
+        if df_ib.loc[c, "width"] < 200:
             ib_mask[int(df_ib.loc[c, "id_st"]): int(df_ib.loc[c, "id_en"])+1] = 0
             df_ib = df_ib.drop(c)
         else:
