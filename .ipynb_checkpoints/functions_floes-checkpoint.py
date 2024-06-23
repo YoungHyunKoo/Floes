@@ -358,7 +358,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
 
         elif (ib_mask[i] != True) and (ib_mask[i-1] == True):
             
-            if abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
+            if np.sum(seg_len[ib_cnt_st:ib_cnt_en+1]) < 200: #abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
                 # print(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st], ib_cnt_en, ib_cnt_st)
                 ib_mask2[ib_cnt_st:ib_cnt_en+1] = False
             else:
@@ -376,7 +376,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
                 df_ib.loc[c, "fb_max"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].max()
                 df_ib.loc[c, "fb_min"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].min()
                 df_ib.loc[c, "fb_std"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].std()
-                df_ib.loc[c, "width"] = abs(seg_dist[ib_cnt_st] - seg_dist[ib_cnt_en])
+                df_ib.loc[c, "width"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'seg_len'].sum()
                 c += 1
         else:
             pass
@@ -406,7 +406,7 @@ def combine_icebergs(df, df_ib, ib_mask, th_fb = 1.0):
             df_ib.loc[c, "fb_max"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].max()
             df_ib.loc[c, "fb_min"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].min()
             df_ib.loc[c, "fb_std"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].std()
-            df_ib.loc[c, "width"] = abs(df.loc[ib_cnt_st, 'seg_x'] - df.loc[ib_cnt_en, 'seg_x'])
+            df_ib.loc[c, "width"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'seg_len'].sum() #abs(df.loc[ib_cnt_st, 'seg_x'] - df.loc[ib_cnt_en, 'seg_x'])
 
             df_ib = df_ib.drop(c-1)
             
