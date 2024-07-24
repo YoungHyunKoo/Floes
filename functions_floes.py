@@ -238,7 +238,7 @@ def get_lead_width_spacing_correlation(lead_widths,lead_positions,lead_width_bin
     return binned_lead_count, binned_lead_spacings
 
 # Calculate modal freeboard based on freeboard distribution
-def calculate_mode(data, N = 10):
+def calculate_mode(data, N = 10, fb_max = 1.5):
     data = data[~np.isnan(data)]
     w = 0.02
     M = 4.0
@@ -250,7 +250,7 @@ def calculate_mode(data, N = 10):
         kde.fit(data[:, None])
         x_d = np.arange(m, M, w)
         logprob = kde.score_samples(x_d[:, None])
-        n_max = np.argmax(np.exp(logprob)[:int(1.00//w)]) # Set the possible maximum modal freeboard
+        n_max = np.argmax(np.exp(logprob)[:int(fb_max//w)]) # Set the possible maximum modal freeboard
         mode = x_d[n_max] + w/2
     elif len(data) > 0: # if the number of observation is not enough, just take 0.2 quantile
         mode = np.quantile(data, 0.2)
@@ -331,7 +331,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
     # seg_dist: along-track distance of ICESat-2 ATL10 track (unit: meters)
     # nprof: number of points in normalized profiles
 
-    ib_mask = (df['fb'].values > th_fb) & (df['sigma'].values < th_sigma) & (df['fb_std'].values < th_std)
+    ib_mask = (df['fb'].values >= th_fb) & (df['sigma'].values <= th_sigma) & (df['fb_std'].values <= th_std)
     
     seg_dist = df['seg_x'].values
     freeboard = df['fb'].values
@@ -358,7 +358,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
 
         elif (ib_mask[i] != True) and (ib_mask[i-1] == True):
             
-            if np.sum(seg_len[ib_cnt_st:ib_cnt_en+1]) < 200: #abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
+            if np.sum(seg_len[ib_cnt_st:ib_cnt_en+1])/2 < 200: #abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
                 # print(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st], ib_cnt_en, ib_cnt_st)
                 ib_mask2[ib_cnt_st:ib_cnt_en+1] = False
             else:
@@ -376,7 +376,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
                 df_ib.loc[c, "fb_max"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].max()
                 df_ib.loc[c, "fb_min"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].min()
                 df_ib.loc[c, "fb_std"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'fb'].std()
-                df_ib.loc[c, "width"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'seg_len'].sum()
+                df_ib.loc[c, "width"] = df.loc[ib_cnt_st:ib_cnt_en+1, 'seg_len'].sum()/2
                 c += 1
         else:
             pass
@@ -384,6 +384,11 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
     return ib_mask2, df_ib
 
 def combine_icebergs(df, df_ib, ib_mask, th_fb = 1.0):
+
+    # Buffer zone for landfast ice
+    if len(df_ib) > 0:
+        df_ib["id_st"] = df_ib["id_st"] - 1
+        df_ib["id_en"] = df_ib["id_en"] + 1
     
     for c in range(1, len(df_ib)):
         fb_btw = df.loc[int(df_ib.loc[c-1, "id_en"]): int(df_ib.loc[c, "id_st"])+1, "fb"]
