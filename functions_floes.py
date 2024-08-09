@@ -358,7 +358,7 @@ def determine_iceberg(df, th_fb = 1.0, th_sigma = 0.02, th_std = 0.1):
 
         elif (ib_mask[i] != True) and (ib_mask[i-1] == True):
             
-            if np.sum(seg_len[ib_cnt_st:ib_cnt_en+1])/2 < 200: #abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
+            if np.sum(seg_len[ib_cnt_st:ib_cnt_en+1])/2 < 100: #abs(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st]) < 100:
                 # print(seg_dist[ib_cnt_en] - seg_dist[ib_cnt_st], ib_cnt_en, ib_cnt_st)
                 ib_mask2[ib_cnt_st:ib_cnt_en+1] = False
             else:
