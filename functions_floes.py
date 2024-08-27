@@ -238,7 +238,7 @@ def get_lead_width_spacing_correlation(lead_widths,lead_positions,lead_width_bin
     return binned_lead_count, binned_lead_spacings
 
 # Calculate modal freeboard based on freeboard distribution
-def calculate_mode(data, N = 10, fb_max = 1.5):
+def calculate_mode(data, N = 10, fb_max = 4):
     data = data[~np.isnan(data)]
     w = 0.02
     M = 4.0
@@ -392,6 +392,7 @@ def combine_icebergs(df, df_ib, ib_mask, th_fb = 1.0):
     
     for c in range(1, len(df_ib)):
         fb_btw = df.loc[int(df_ib.loc[c-1, "id_en"]): int(df_ib.loc[c, "id_st"])+1, "fb"]
+        fb_std = df.loc[int(df_ib.loc[c-1, "id_en"]): int(df_ib.loc[c, "id_st"])+1, "fb_std"]
         # print(c, int(df_ib.loc[c-1, "id_en"]), int(df_ib.loc[c, "id_st"])+1, fb_btw > 1.0)
         x1 = df.loc[int(df_ib.loc[c-1, "id_en"]), "seg_x"]
         x2 = df.loc[int(df_ib.loc[c, "id_st"]), "seg_x"]
